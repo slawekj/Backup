@@ -16,8 +16,7 @@ rem -------------------------------------------------------------
 set "SCRIPT_DIR=%~dp0"
 set "LAST_RUN_FILE=%SCRIPT_DIR%last_run.txt"
 rem interval is 36 hours in seconds
-rem set /a INTERVAL=129600
-set /a INTERVAL=1
+set /a INTERVAL=129600
 
 rem -------------------------------------------------------------
 rem 2. Get current time in seconds since epoch
