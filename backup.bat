@@ -2,7 +2,7 @@
 setlocal
 
 rem -------------------------------------------------------------
-rem Set required environment variables for Restic
+rem Set required environment variables for S3 and Restic
 rem -------------------------------------------------------------
 set "AWS_ACCESS_KEY_ID=%1"
 set "AWS_SECRET_ACCESS_KEY=%2"
@@ -15,8 +15,7 @@ rem -------------------------------------------------------------
 
 set "SCRIPT_DIR=%~dp0"
 set "LAST_RUN_FILE=%SCRIPT_DIR%last_run.txt"
-rem interval is 36 hours in seconds
-set /a INTERVAL=129600
+set /a INTERVAL=%5
 
 rem -------------------------------------------------------------
 rem 2. Get current time in seconds since epoch
@@ -41,12 +40,27 @@ if %DIFF% LSS 0 (
 )
 
 rem -------------------------------------------------------------
-rem 5. Decide: run or skip
+rem 5. Collect backup paths from argument 5 onwards
+rem -------------------------------------------------------------
+set "BACKUP_PATHS="
+setlocal enabledelayedexpansion
+set i=6
+:collect_paths
+call set "arg=%%%i%%"
+if defined arg (
+    set "BACKUP_PATHS=!BACKUP_PATHS! "!arg!""
+    set /a i+=1
+    goto collect_paths
+)
+endlocal & set "BACKUP_PATHS=%BACKUP_PATHS%"
+
+rem -------------------------------------------------------------
+rem 6. Decide: run or skip
 rem -------------------------------------------------------------
 if %DIFF% GEQ %INTERVAL% (
     echo This window will close automatically once the backup is complete.
     echo.
-    restic --verbose backup "%USERPROFILE%\Desktop" "%USERPROFILE%\Downloads"
+    restic --verbose backup %BACKUP_PATHS%
     if errorlevel 1 (
         echo Backup failed.
         exit /b 1
