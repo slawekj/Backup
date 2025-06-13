@@ -65,7 +65,7 @@ if %DIFF% GEQ %INTERVAL% (
         echo Backup failed.
         exit /b 1
     )
-    restic forget --group-by paths --keep-within 7d --prune
+    restic forget --group-by paths --keep-within 7d --keep-last 10 --prune
     if errorlevel 1 (
         echo Forget failed.
         exit /b 1
