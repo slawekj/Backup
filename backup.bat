@@ -8,6 +8,7 @@ set "AWS_ACCESS_KEY_ID=%1"
 set "AWS_SECRET_ACCESS_KEY=%2"
 set "RESTIC_REPOSITORY=%3"
 set "RESTIC_PASSWORD=%4"
+set /a INTERVAL=%5
 
 rem -------------------------------------------------------------
 rem 1. Configuration
@@ -15,7 +16,6 @@ rem -------------------------------------------------------------
 
 set "SCRIPT_DIR=%~dp0"
 set "LAST_RUN_FILE=%SCRIPT_DIR%last_run.txt"
-set /a INTERVAL=%5
 
 rem -------------------------------------------------------------
 rem 2. Get current time in seconds since epoch
