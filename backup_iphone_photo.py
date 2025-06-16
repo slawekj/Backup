@@ -37,7 +37,7 @@ def get_photo_year(photo_stream):
               required=True,
               help='Output photo file name')
 @click.option('--output-folder',
-              type=click.Path(exists=True, file_okay=False, writable=True),
+              type=click.Path(exists=False, file_okay=False, writable=True),
               required=True,
               help='Output folder to copy the photo to')
 def copy_photo(photo_file, photo_name, output_folder):
