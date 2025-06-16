@@ -1,6 +1,8 @@
 import os
+import sys
 import shutil
 from datetime import datetime
+from io import BytesIO
 
 import click
 import piexif
@@ -10,16 +12,15 @@ from PIL import Image
 pillow_heif.register_heif_opener()
 
 
-def _photo_file_to_prefix(photo_file):
+def get_photo_year(photo_stream):
     try:
-        with Image.open(photo_file) as img:
+        with Image.open(photo_stream) as img:
             exif_data = img.info.get('exif')
             if exif_data:
                 exif_dict = piexif.load(exif_data)
                 date_bytes = exif_dict['0th'].get(piexif.ImageIFD.DateTime)
                 if date_bytes:
-                    dt = datetime.strptime(date_bytes.decode(), "%Y:%m:%d %H:%M:%S")
-                    return f"{dt.year}"
+                    return str(datetime.strptime(date_bytes.decode(), "%Y:%m:%d %H:%M:%S").year)
     except Exception:
         pass
     return "Others"
@@ -28,17 +29,32 @@ def _photo_file_to_prefix(photo_file):
 @click.command()
 @click.option('--photo-file',
               type=click.Path(exists=True, dir_okay=False, readable=True),
+              default='/dev/stdin',
+              show_default=True,
+              help='Input photo file (default: read from stdin)')
+@click.option('--photo-name',
+              type=str,
               required=True,
-              help='Input photo file')
+              help='Output photo file name')
 @click.option('--output-folder',
               type=click.Path(exists=True, file_okay=False, writable=True),
               required=True,
               help='Output folder to copy the photo to')
-def copy_photo(photo_file, output_folder):
-    """Copy a photo to the specified output folder and print info."""
-    output_dir = os.path.join(output_folder, _photo_file_to_prefix(photo_file))
+def copy_photo(photo_file, photo_name, output_folder):
+    if photo_file == '/dev/stdin':
+        data = sys.stdin.buffer.read()
+        year = get_photo_year(BytesIO(data))
+        src = BytesIO(data)
+    else:
+        year = get_photo_year(photo_file)
+        src = open(photo_file, 'rb')
+    output_dir = os.path.join(output_folder, year)
     os.makedirs(output_dir, exist_ok=True)
-    shutil.copy(photo_file, os.path.join(output_dir, os.path.basename(photo_file)))
+    dst_path = os.path.join(output_dir, photo_name)
+    with open(dst_path, 'wb') as dst:
+        shutil.copyfileobj(src, dst)
+    if photo_file != '/dev/stdin':
+        src.close()
 
 
 if __name__ == '__main__':
